@@ -9,12 +9,39 @@
 import UIKit
 
 class ViewController: UIViewController {
-
+    
+    var movies: [Movie] = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        loadMovies()
+        
     }
-
-
+    
+    func loadMovies(){
+        guard let jsonURL = Bundle.main.url(forResource: "movies", withExtension: "json") else {
+            return
+        }
+        
+        do{
+            let jsonData  = try Data(contentsOf: jsonURL)
+            
+            //let jsonDecoder = JSONDecoder()
+            
+            //jsonDecoder.keyDecodingStrategy = .convertFromSnakeCase
+            
+            movies = try JSONDecoder().decode([Movie].self, from: jsonData)
+            
+            
+            
+            movies.forEach{(movie) in
+                print(movie.title)
+            }
+            
+        }catch{
+            print(error)
+        }
+    }
 }
 
