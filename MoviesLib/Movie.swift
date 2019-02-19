@@ -6,17 +6,17 @@
 //  Copyright © 2019 FIAP. All rights reserved.
 //
 
-import Foundation
-
-struct Movie: Codable {
-    let title: String
-    let categories: String
-    let duration: String
-    let rating: Double
-    let summary: String
-    let image: String
+//import Foundation
+//
+//struct Movie: Codable {
+//    let title: String
+//    let categories: String
+//    let duration: String
+//    let rating: Double
+//    let summary: String
+//    let image: String
     
 //    enum CodingKeys: String, CodingKeys{
 //        case title
 //    }
-}
+//}

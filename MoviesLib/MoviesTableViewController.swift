@@ -7,40 +7,45 @@
 //
 
 import UIKit
+import CoreData
 
 class MoviesTableViewController: UITableViewController {
     
-    var movies: [Movie] = []
+    //var movies: [Movie] = []
+    var fetchedResultsController: NSFetchedResultsController<Movie>!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         loadMovies()
+    }
+    
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {        
         
+        if let indexPath = tableView.indexPathForSelectedRow,
+            let movieVC = segue.destination as? MovieViewController{
+            let movie = fetchedResultsController.object(at: indexPath)
+            movieVC.movie = movie
+        }
     }
     
     func loadMovies(){
-        guard let jsonURL = Bundle.main.url(forResource: "movies", withExtension: "json") else {
-            return
-        }
+        let fetchRequest: NSFetchRequest<Movie> = Movie.fetchRequest()
+        let sortDecriptor = NSSortDescriptor(key: title, ascending: true)
+        fetchRequest.sortDescriptors = [sortDecriptor]
+        
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: context, sectionNameKeyPath: nil, cacheName: nil)
+        
+        fetchedResultsController.delegate = self
         
         do{
-            let jsonData  = try Data(contentsOf: jsonURL)
-            
-            //let jsonDecoder = JSONDecoder()
-            //jsonDecoder.keyDecodingStrategy = .convertFromSnakeCase
-            
-            movies = try JSONDecoder().decode([Movie].self, from: jsonData)
-            
-            
-            
-            movies.forEach{(movie) in
-                print(movie.title)
-            }
-            
+            try fetchedResultsController.performFetch()
         }catch{
             print(error)
         }
+        
+        
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -50,9 +55,20 @@ class MoviesTableViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return movies.count
+        return fetchedResultsController.fetchedObjects?.count ?? 0
     }
-    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete{
+            let movie = fetchedResultsController.object(at: indexPath)
+            context.delete(movie)
+            do{
+                try context.save()
+            }catch{
+                print(error)
+            }
+            
+        }
+    }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as? MoviewCellTableViewCell
         
@@ -65,12 +81,17 @@ class MoviesTableViewController: UITableViewController {
 //        cell.textLabel?.text = movie.title
 //        cell.detailTextLabel?.text = movie.duration
 
-        let movie = movies[indexPath.row]
+        let movie = fetchedResultsController.object(at: indexPath)
         cell?.prepare(with: movie)
         
         return cell!
     }
     
-    
+}
 
+
+extension MoviesTableViewController: NSFetchedResultsControllerDelegate{
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.reloadData()
+    }
 }
